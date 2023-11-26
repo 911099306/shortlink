@@ -1,7 +1,5 @@
 package com.offer.shortlink.admin.dto.resp;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.offer.shortlink.admin.common.serialize.PhoneDesensitizationSerializer;
 import lombok.Data;
 
 /**
@@ -11,7 +9,7 @@ import lombok.Data;
  * @description 用户返回参数响应
  **/
 @Data
-public class UserRespDTO {
+public class UserActualRespDTO {
 
     /**
      * 雪花算法id
@@ -32,7 +30,6 @@ public class UserRespDTO {
     /**
      * 手机号
      */
-    @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
 
     /**

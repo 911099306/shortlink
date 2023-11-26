@@ -1,5 +1,6 @@
 package com.offer.shortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.admin.common.convention.exception.ClientException;
 import com.offer.shortlink.admin.common.enums.UserErrorCodeEnum;
@@ -7,7 +8,6 @@ import com.offer.shortlink.admin.dao.entity.UserDo;
 import com.offer.shortlink.admin.dao.mapper.UserMapper;
 import com.offer.shortlink.admin.dto.resp.UserRespDTO;
 import com.offer.shortlink.admin.service.UserService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 /**
@@ -28,9 +28,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo>
         if (userDo == null) {
             throw new  ClientException(UserErrorCodeEnum.USER_NULL);
         }
-        UserRespDTO result = new UserRespDTO();
-        BeanUtils.copyProperties(userDo, result);
-        return result;
+        return BeanUtil.copyProperties(userDo,UserRespDTO.class);
     }
 }
 
