@@ -7,6 +7,15 @@
     <groupId>com.offer.shortlink</groupId>
     <artifactId>shortlink-all</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <!-- 标识当前模块 不加入打包 -->
+    <packaging>pom</packaging>
+
+    <!-- 上下级关系 -->
+    <modules>
+        <module>admin</module>
+        <module>project</module>
+        <module>gateway</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
@@ -24,6 +33,12 @@
         <guava.version>30.0-jre</guava.version>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -100,5 +115,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+
 
 </project>
