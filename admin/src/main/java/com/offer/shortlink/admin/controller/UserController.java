@@ -3,8 +3,11 @@ package com.offer.shortlink.admin.controller;
 import cn.hutool.core.bean.BeanUtil;
 import com.offer.shortlink.admin.common.convention.result.Result;
 import com.offer.shortlink.admin.common.convention.result.Results;
+import com.offer.shortlink.admin.dto.req.UserLoginReqDTO;
 import com.offer.shortlink.admin.dto.req.UserRegisterReqDTO;
+import com.offer.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.offer.shortlink.admin.dto.resp.UserActualRespDTO;
+import com.offer.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.offer.shortlink.admin.dto.resp.UserRespDTO;
 import com.offer.shortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -65,4 +68,35 @@ public class UserController {
         return Results.success();
     }
 
+    /**
+     * 根据用户名修改用户信息
+     * @param requestParam 用户修改信息请求参数
+     */
+    @PutMapping("/api/short-link/v1/user")
+    public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
+        userService.update(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 用户登录
+     * @param requestParam
+     * @return
+     */
+    @PostMapping("/api/short-link/v1/user/login")
+    public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
+
+        UserLoginRespDTO userLoginRespDTO = userService.login(requestParam);
+        return Results.success(userLoginRespDTO);
+    }
+
+    /**
+     * 检查用户是否登录
+     * @param token 用户uuid
+     * @return boolean true 为已登录
+     */
+    @GetMapping("/api/short-link/v1/user/check-login")
+    public Result<Boolean> checkLogin(@RequestParam("token") String token,@RequestParam("username") String username) {
+        return Results.success(userService.checkLogin(username,token));
+    }
 }

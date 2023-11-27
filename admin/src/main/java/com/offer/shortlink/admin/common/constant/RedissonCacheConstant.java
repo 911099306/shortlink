@@ -11,4 +11,5 @@ public class RedissonCacheConstant {
 
 
     public static final String LOCK_USER_REGISTER_KET = "short-link:lock-user-register:";
+    public static final String LOGIN = "short-link:lock-user-register:";
 }
