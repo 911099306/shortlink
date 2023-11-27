@@ -2,6 +2,7 @@ package com.offer.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.offer.shortlink.admin.biz.user.UserContext;
 import com.offer.shortlink.admin.dao.entity.GroupDO;
 import com.offer.shortlink.admin.dao.mapper.GroupMapper;
 import com.offer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
@@ -32,8 +33,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
     public void saveGroup(String groupName) {
         GroupDO groupDO = GroupDO.builder()
                 .gid(generateGid())
-                // TODO 传入username
-                // .username()
+                .username(UserContext.getUsername())
                 .name(groupName)
                 .sortOrder(0)
                 .build();
@@ -46,8 +46,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
     public List<ShortLinkGroupRespDTO> selectGroupList() {
         // TODO 返回用户名
         List<GroupDO> groupDOList = this.lambdaQuery()
-                // TODO 从上下文中获取username
-                .eq(GroupDO::getUsername, "monou")
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .eq(GroupDO::getDelFlag, 0)
                 .orderByDesc(GroupDO::getSortOrder)
                 .orderByDesc(GroupDO::getCreateTime)
@@ -64,7 +63,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
             gid = RandomGenerator.generateRandomString();
             GroupDO hasGroupFlag = this.lambdaQuery()
                     .eq(GroupDO::getGid, gid)
-                    // TODO 设置用户名
+                    .eq(GroupDO::getUsername,UserContext.getUsername())
                     .eq(GroupDO::getUsername, null)
                     .one();
             hasGid = hasGroupFlag == null;
