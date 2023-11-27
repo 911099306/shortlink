@@ -1,12 +1,16 @@
 package com.offer.shortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.admin.dao.entity.GroupDO;
 import com.offer.shortlink.admin.dao.mapper.GroupMapper;
+import com.offer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.offer.shortlink.admin.service.GroupService;
 import com.offer.shortlink.admin.toolkit.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 /**
@@ -36,6 +40,20 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
 
         this.save(groupDO);
 
+    }
+
+    @Override
+    public List<ShortLinkGroupRespDTO> selectGroupList() {
+        // TODO 返回用户名
+        List<GroupDO> groupDOList = this.lambdaQuery()
+                // TODO 从上下文中获取username
+                .eq(GroupDO::getUsername, "monou")
+                .eq(GroupDO::getDelFlag, 0)
+                .orderByDesc(GroupDO::getSortOrder)
+                .orderByDesc(GroupDO::getCreateTime)
+                .list();
+
+        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
     }
 
     private String generateGid() {
