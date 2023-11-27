@@ -31,6 +31,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
                 // TODO 传入username
                 // .username()
                 .name(groupName)
+                .sortOrder(0)
                 .build();
 
         this.save(groupDO);
