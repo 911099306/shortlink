@@ -91,12 +91,26 @@ public class UserController {
     }
 
     /**
-     * 检查用户是否登录
-     * @param token 用户uuid
-     * @return boolean true 为已登录
+     * 用户退出登录
+     * @param token 唯一uuid
+     * @param username 用户名
+     */
+    @DeleteMapping("/api/short-link/v1/user/logout")
+    public Result<Void> logout(@RequestParam("token") String token,@RequestParam("username") String username ) {
+        userService.logout(username, token);
+        return Results.success();
+    }
+
+
+    /**
+     * 查看用户登录情况
+     * @param token 唯一uuid
+     * @param username 用户名
      */
     @GetMapping("/api/short-link/v1/user/check-login")
     public Result<Boolean> checkLogin(@RequestParam("token") String token,@RequestParam("username") String username) {
         return Results.success(userService.checkLogin(username,token));
     }
+
+
 }

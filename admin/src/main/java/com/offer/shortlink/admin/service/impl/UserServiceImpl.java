@@ -159,6 +159,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo>
 
         return stringRedisTemplate.opsForHash().hasKey("login_" + username, token);
     }
+
+    /**
+     * 退出登录
+     * @param username  用户名
+     * @param token     用户uuid
+     */
+    @Override
+    public void logout(String username, String token) {
+
+        // TODO  可能当前用户已登录，但是删除的是其他用户， 应该保存一个 ThreadLocal，判断推出的是不是自己的号
+        if (checkLogin(username, token)) {
+            stringRedisTemplate.delete("login_" + username);
+            return;
+        }
+        throw new ClientException("用户token不存在或未登录");
+    }
 }
 
 
