@@ -3,8 +3,10 @@ package com.offer.shortlink.admin.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.admin.biz.user.UserContext;
+import com.offer.shortlink.admin.common.convention.exception.ClientException;
 import com.offer.shortlink.admin.dao.entity.GroupDO;
 import com.offer.shortlink.admin.dao.mapper.GroupMapper;
+import com.offer.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.offer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.offer.shortlink.admin.service.GroupService;
 import com.offer.shortlink.admin.toolkit.RandomGenerator;
@@ -53,6 +55,39 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
                 .list();
 
         return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+    }
+
+    /**
+     * 修改短链接分组
+     * @param requestParam 修改分组请求参数
+     */
+    @Override
+    public void updateGroupName(ShortLinkGroupUpdateReqDTO requestParam) {
+        // 获取当前登录人
+        String username = UserContext.getUsername();
+
+        // 根据 gid 查询分组，并判断当前分组是否属于登录用户,且 未删除，
+        GroupDO groupDO = this.lambdaQuery()
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getUsername, username)
+                .eq(GroupDO::getDelFlag, 0)
+                .one();
+        if (groupDO == null) {
+            throw new ClientException("该分组不存在");
+        }
+
+        // 再进行修改
+        boolean update = this.lambdaUpdate()
+                .eq(GroupDO::getGid,requestParam.getGid())
+                .eq(GroupDO::getUsername, username)
+                .eq(GroupDO::getDelFlag,0)
+                .set(GroupDO::getName, requestParam.getName())
+                .update();
+
+        // 修改失败则抛出异常
+        if (!update) {
+            throw new ClientException("修改分组名称失败");
+        }
     }
 
     private String generateGid() {

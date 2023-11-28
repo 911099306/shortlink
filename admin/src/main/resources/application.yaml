@@ -1,6 +1,6 @@
 server:
-#  port: 8002
-  port: 8888
+  port: 8002
+#  port: 8888
 
 
 spring:

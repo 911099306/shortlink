@@ -21,13 +21,13 @@ public class UserTransmitFilter implements Filter {
 
     private final StringRedisTemplate stringRedisTemplate;
     // 添加需要排除的URL
-    private static final String EXCLUDED_URL = "http://127.0.0.1:8888/api/short-link/v1/user/login";
+    private static final String EXCLUDED_URL = "/api/short-link/v1/user/login";
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
 
         // 获取请求的URL
-        String requestURL = httpServletRequest.getRequestURL().toString();
+        String requestURL = httpServletRequest.getRequestURI();
 
         // 检查是否是需要排除的URL，如果是，直接放行
         if (EXCLUDED_URL.equals(requestURL)) {
