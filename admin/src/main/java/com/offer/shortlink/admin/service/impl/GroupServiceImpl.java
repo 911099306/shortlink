@@ -90,6 +90,31 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
         }
     }
 
+    @Override
+    public void deleteGroup(String gid) {
+        // 获取当前登录用户
+        String username = UserContext.getUsername();
+        GroupDO groupDO = this.lambdaQuery()
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getUsername, username)
+                .eq(GroupDO::getDelFlag, 0)
+                .one();
+        if (groupDO == null) {
+            throw new ClientException("短链接分组不存在");
+        }
+        // 删除
+        boolean update = this.lambdaUpdate()
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getUsername, username)
+                .eq(GroupDO::getDelFlag, 0)
+                .set(GroupDO::getDelFlag, 1)
+                .update();
+
+        if (!update) {
+            throw new ClientException("删除短链接分组失败");
+        }
+    }
+
     private String generateGid() {
         // TODO 优化redis。 作为分组，应该是经常查询且不变，存入redis
         boolean hasGid = false;
