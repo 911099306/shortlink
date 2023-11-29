@@ -29,6 +29,8 @@ public class HashUtil {
     }
 
     public static String hashToBase62(String str) {
+        // 为防止 一个 网址，始终生成同一个字符串，增加时间戳
+        str += System.currentTimeMillis();
         int i = MurmurHash.hash32(str);
         long num = i < 0 ? Integer.MAX_VALUE - (long) i : i;
         return convertDecToBase62(num);
