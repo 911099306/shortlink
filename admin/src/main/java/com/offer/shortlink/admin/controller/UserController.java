@@ -38,7 +38,6 @@ public class UserController {
             // return new Result<UserRespDTO>()
             //         .setCode(UserErrorCodeEnum.USER_NULL.code()).setMessage(UserErrorCodeEnum.USER_NULL.message());
             // return Results.failure(UserErrorCodeEnum.USER_NULL.code(),UserErrorCodeEnum.USER_NULL.message());
-
         // }
         return Results.success(userService.getUserByUsername(username));
     }
