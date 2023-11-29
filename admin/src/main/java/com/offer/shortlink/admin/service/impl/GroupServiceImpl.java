@@ -4,8 +4,10 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.admin.biz.user.UserContext;
 import com.offer.shortlink.admin.common.convention.exception.ClientException;
+import com.offer.shortlink.admin.common.convention.exception.ServiceException;
 import com.offer.shortlink.admin.dao.entity.GroupDO;
 import com.offer.shortlink.admin.dao.mapper.GroupMapper;
+import com.offer.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.offer.shortlink.admin.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.offer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
 import com.offer.shortlink.admin.service.GroupService;
@@ -113,6 +115,36 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
         if (!update) {
             throw new ClientException("删除短链接分组失败");
         }
+    }
+
+    /**
+     * 短链接分组排序
+     * @param requestParam 短链接分组排序功能参数
+     */
+    @Override
+    public void sortGroup(List<ShortLinkGroupSortReqDTO> requestParam) {
+        // 获取用户名
+        String username = UserContext.getUsername();
+        requestParam.forEach(item->{
+            GroupDO groupDO = this.lambdaQuery()
+                    .eq(GroupDO::getUsername, username)
+                    .eq(GroupDO::getGid, item.getGid())
+                    .eq(GroupDO::getDelFlag, 0)
+                    .one();
+            if (groupDO == null) {
+                throw new ClientException("分组记录不存在");
+            }
+
+            boolean update = this.lambdaUpdate()
+                    .eq(GroupDO::getUsername, username)
+                    .eq(GroupDO::getGid, item.getGid())
+                    .eq(GroupDO::getDelFlag, 0)
+                    .set(GroupDO::getSortOrder, item.getSortOrder())
+                    .update();
+            if (!update) {
+                throw new ServiceException("排序字段更新失败");
+            }
+        });
     }
 
     private String generateGid() {
