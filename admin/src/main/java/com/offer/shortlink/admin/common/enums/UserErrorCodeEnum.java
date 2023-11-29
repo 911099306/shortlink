@@ -9,6 +9,9 @@ import com.offer.shortlink.admin.common.convention.errorcode.IErrorCode;
  **/
 public enum UserErrorCodeEnum implements IErrorCode {
 
+    // ========== 客户端异常 ==========
+    USER_TOKEN_FAIL("A000200", "用户token验证失败"),
+
     // ========== 用户记录不存在 ==========
     USER_NULL("B000200", "用户记录不存在"),
     // ========== 用户记录已存在 ==========
