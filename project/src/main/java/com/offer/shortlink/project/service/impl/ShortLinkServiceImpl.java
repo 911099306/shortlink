@@ -1,12 +1,17 @@
 package com.offer.shortlink.project.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.project.common.convention.exception.ServiceException;
 import com.offer.shortlink.project.dao.entity.ShortLinkDO;
 import com.offer.shortlink.project.dao.mapper.LinkMapper;
 import com.offer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
+import com.offer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
+import com.offer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.offer.shortlink.project.service.ShortLinkService;
 import com.offer.shortlink.project.toolkit.HashUtil;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +76,26 @@ public class ShortLinkServiceImpl extends ServiceImpl<LinkMapper, ShortLinkDO> i
                 .originUrl(requestParam.getOriginUrl())
                 .fullShortUrl(fullShortUrl)
                 .build();
+    }
+
+    /**
+     * 短链接分页查询
+     * @param requestParam 短链接分页查询参数
+     */
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+
+        IPage<ShortLinkDO> page = new Page<>(requestParam.getCurrent(),requestParam.getSize());
+
+        this.lambdaQuery()
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 0)
+                .orderByDesc(ShortLinkDO::getCreateTime)
+                .page(page);
+
+
+        return page.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     /**
