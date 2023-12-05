@@ -1,5 +1,7 @@
 package com.offer.shortlink.admin.test;
 
+import java.util.HashMap;
+
 /**
  * @author serendipity
  * @version 1.0
@@ -27,5 +29,10 @@ public class UserTableShardingTest {
             System.out.printf((SQL) + "%n",i);
         }
 
+        HashMap<Integer, Integer> mao = new HashMap<>();
     }
+
+
+
+
 }

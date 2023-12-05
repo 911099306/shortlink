@@ -56,7 +56,7 @@ public class UserTransmitFilter implements Filter {
         String username = httpServletRequest.getHeader(USER_USERNAME);
         String token = httpServletRequest.getHeader(USER_TOKEN);
 
-        if (StrUtil.isAllNotBlank(username, token)) {
+        if (!StrUtil.isAllNotBlank(username, token)) {
             returnJson((HttpServletResponse) servletResponse, JSON.toJSONString(Results.failure(new ClientException(USER_TOKEN_FAIL))));
             return;
         }
