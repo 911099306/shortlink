@@ -7,10 +7,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.offer.shortlink.project.common.convention.exception.ServiceException;
 import com.offer.shortlink.project.dao.entity.ShortLinkDO;
-import com.offer.shortlink.project.dao.mapper.LinkMapper;
+import com.offer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.offer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.offer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
+import com.offer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.offer.shortlink.project.service.ShortLinkService;
 import com.offer.shortlink.project.toolkit.HashUtil;
@@ -20,6 +21,9 @@ import org.redisson.api.RBloomFilter;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * @author serendipity
  * @version 1.0
@@ -28,12 +32,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ShortLinkServiceImpl extends ServiceImpl<LinkMapper, ShortLinkDO> implements ShortLinkService {
+public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
 
 
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
+    private final ShortLinkMapper shortLinkMapper;
+
     /**
      * 创建短链接
+     *
      * @param requestParam 创建短链接请求参数
      * @return 短链接创建信息
      */
@@ -80,12 +87,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<LinkMapper, ShortLinkDO> i
 
     /**
      * 短链接分页查询
+     *
      * @param requestParam 短链接分页查询参数
      */
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
 
-        IPage<ShortLinkDO> page = new Page<>(requestParam.getCurrent(),requestParam.getSize());
+        IPage<ShortLinkDO> page = new Page<>(requestParam.getCurrent(), requestParam.getSize());
 
         this.lambdaQuery()
                 .eq(ShortLinkDO::getGid, requestParam.getGid())
@@ -98,8 +106,29 @@ public class ShortLinkServiceImpl extends ServiceImpl<LinkMapper, ShortLinkDO> i
         return page.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
+    @Override
+    public List<ShortLinkGroupCountQueryRespDTO> countPerGroup(List<String> requestParam) {
+        //  因为 ShortDO 内部没有 count（*），所以使用 click_num 先进行占位
+        List<ShortLinkDO> list = this.query()
+                .select("gid ,count(*) as click_num")
+                .eq("enable_status", 0)
+                .eq("del_flag", 0)
+                // 还有一个有效期，是否需要纳入统计？？？
+                .in("gid", requestParam)
+                .groupBy("gid")
+                .list();
+        return list.stream()
+                .map(item ->
+                    ShortLinkGroupCountQueryRespDTO.builder()
+                        .gid(item.getGid())
+                        .shortLinkCount(item.getClickNum())
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
     /**
      * 根据 字符串 生成短链接标识
+     *
      * @param requestParam
      * @return
      */
