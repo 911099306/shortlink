@@ -93,7 +93,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo>
 
                 // 3. 添加数据库成功， 加入布隆过滤器
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
-                groupService.saveGroup("默认分组");
+                groupService.saveGroup(requestParam.getUsername(),"默认分组");
                 return;
             }
 

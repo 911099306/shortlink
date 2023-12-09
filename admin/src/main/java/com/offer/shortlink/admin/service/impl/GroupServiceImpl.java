@@ -41,15 +41,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
      */
     @Override
     public void saveGroup(String groupName) {
+       this.saveGroup(UserContext.getUsername(),groupName);
+    }
+
+    @Override
+    public void saveGroup(String username,String groupName) {
         GroupDO groupDO = GroupDO.builder()
                 .gid(generateGid())
-                .username(UserContext.getUsername())
+                .username(username)
                 .name(groupName)
                 .sortOrder(0)
                 .build();
-
         this.save(groupDO);
-
     }
 
     @Override
@@ -171,7 +174,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
             gid = RandomGenerator.generateRandomString();
             GroupDO hasGroupFlag = this.lambdaQuery()
                     .eq(GroupDO::getGid, gid)
-                    .eq(GroupDO::getUsername,UserContext.getUsername())
+                    // gid 已经是全局唯一的，不需要和username进行查询
+                    // .eq(GroupDO::getUsername,UserContext.getUsername())
                     .one();
             hasGid = hasGroupFlag == null;
         }
