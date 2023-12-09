@@ -156,7 +156,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
             GroupDO hasGroupFlag = this.lambdaQuery()
                     .eq(GroupDO::getGid, gid)
                     .eq(GroupDO::getUsername,UserContext.getUsername())
-                    .eq(GroupDO::getUsername, null)
                     .one();
             hasGid = hasGroupFlag == null;
         }
