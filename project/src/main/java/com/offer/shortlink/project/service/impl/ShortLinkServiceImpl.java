@@ -2,14 +2,20 @@ package com.offer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.text.StrBuilder;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.offer.shortlink.project.common.convention.exception.ClientException;
 import com.offer.shortlink.project.common.convention.exception.ServiceException;
+import com.offer.shortlink.project.common.enums.ValiDateTypeEnum;
 import com.offer.shortlink.project.dao.entity.ShortLinkDO;
 import com.offer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.offer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.offer.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.offer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
@@ -22,6 +28,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -83,6 +90,61 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .originUrl(requestParam.getOriginUrl())
                 .fullShortUrl(fullShortUrl)
                 .build();
+    }
+
+    @Override
+    public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+
+        // TODO 应该先判断一下这个是不是登录用户自己的gid
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .eq(ShortLinkDO::getDelFlag, 0)
+                .eq(ShortLinkDO::getEnableStatus, 0);
+        ShortLinkDO hasShortLinkDO = baseMapper.selectOne(queryWrapper);
+
+        if (hasShortLinkDO == null) {
+            throw new ClientException("短连接信息不存在");
+        }
+
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .shortUri(hasShortLinkDO.getShortUri())
+                .clickNum(hasShortLinkDO.getClickNum())
+                // 应该是 也可以修改的吖
+                // .favicon(requestParam.getFavicon())
+                .favicon(hasShortLinkDO.getFavicon())
+                .createdType(hasShortLinkDO.getCreatedType())
+                // 为什么这个不修改 ?
+                // .fullShortUrl(requestParam.getFullShortUrl())
+                .domain(requestParam.getDomain())
+                .originUrl(requestParam.getOriginUrl())
+                .gid(requestParam.getGid())
+                .validDateType(requestParam.getValidDateType())
+                .validDate(requestParam.getValidDate())
+                .describe(requestParam.getDescribe())
+                .build();
+
+        if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
+            // 当 不修改 gid， 直接在原位置进行修改
+            LambdaUpdateWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaUpdate(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getEnableStatus, 0)
+                    // 若 有效期类型为 永久， 则设置有效期时间为null
+                    .set(Objects.equals(requestParam.getValidDateType(), ValiDateTypeEnum.PERMANENT.getType()), ShortLinkDO::getValidDate, null);
+            baseMapper.update(shortLinkDO, updateWrapper);
+        }else{
+            /// 修改 gid ，需要先删除之前的link， 然后新建
+            // 这里好像有问题，没有穿如新的gid，是不可能走到这里的。
+            LambdaQueryWrapper<ShortLinkDO> updateWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+                    .eq(ShortLinkDO::getGid, requestParam.getGid())
+                    .eq(ShortLinkDO::getDelFlag, 0)
+                    .eq(ShortLinkDO::getEnableStatus, 0);
+            baseMapper.delete(updateWrapper);
+            baseMapper.insert(shortLinkDO);
+        }
     }
 
     /**
