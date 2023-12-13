@@ -39,10 +39,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.offer.shortlink.project.common.constant.RedisKeyConstant.GOTO_SHORT_LINK_KEY;
-import static com.offer.shortlink.project.common.constant.RedisKeyConstant.LOCK_GOTO_SHORT_LINK_KEY;
+import static com.offer.shortlink.project.common.constant.RedisKeyConstant.*;
 
 /**
  * @author serendipity
@@ -69,10 +69,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         // 查询redis， 看是否已经查询过该信息
         String originalLink = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
 
-        if (StrUtil.isNotBlank(originalLink)) {
+        if (StrUtil.isAllNotBlank(originalLink)) {
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
         }
+
+        // 预防缓存传统
+        boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+        if (!contains) {
+            // 不存在，数据库中一定没有，直接返回
+            // 不需要缓存空对象，减少内存占用
+            return;
+        }
+
+        String gotoIsNulShortLink = redisTemplate.opsForValue().get(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+        if (StrUtil.isNotBlank(gotoIsNulShortLink)) {
+            // 双重锁检查，尽量减少对数据库的访问
+            return;
+        }
+
 
         // 防止缓存击穿 redKey
         // 使用分布式锁 redisson， 进行加锁，使得只有一个请求会打到mysql内
@@ -81,7 +96,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         try {
             // 双检加锁机制
             originalLink = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
-            if (StrUtil.isBlank(originalLink)){
+            if (StrUtil.isNotBlank(originalLink)){
                 // 非空，已经有一个线程进行 回写 了，直接进行跳转
                 ((HttpServletResponse) response).sendRedirect(originalLink);
                 return;
@@ -93,6 +108,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
             if (shortLinkGotoDO == null) {
                 // TODO 严禁来说，此处需要风控
+                // 缓存一个空对象, 随笔设置一个控制即可
+                redisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-",30, TimeUnit.SECONDS);
                 return;
             }
 
