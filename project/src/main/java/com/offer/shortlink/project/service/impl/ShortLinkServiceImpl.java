@@ -24,6 +24,7 @@ import com.offer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.offer.shortlink.project.service.ShortLinkService;
 import com.offer.shortlink.project.toolkit.HashUtil;
+import com.offer.shortlink.project.toolkit.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -121,7 +122,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
             if (shortLinkDO != null) {
                 // 开始跳转了。
-                redisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),shortLinkDO.getOriginUrl());
+                redisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),shortLinkDO.getOriginUrl(),3,TimeUnit.MINUTES);
                 ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
             }
         } finally {
@@ -177,6 +178,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 throw new ServiceException("短链接生成重复");
             }
         }
+        // 加入缓存  进行预热
+        redisTemplate.opsForValue().set(
+                String.format(GOTO_SHORT_LINK_KEY,fullShortUrl),
+                requestParam.getOriginUrl(),
+                LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()),
+                TimeUnit.MILLISECONDS);
+        // 加入布隆过滤器，
         shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl( "http://" + fullShortUrl)
