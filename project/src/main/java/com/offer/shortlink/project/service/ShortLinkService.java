@@ -9,6 +9,8 @@ import com.offer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.offer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import java.util.List;
 
@@ -18,6 +20,12 @@ import java.util.List;
  * @date 2023/11/29
  **/
 public interface ShortLinkService extends IService<ShortLinkDO> {
+
+    /**
+     * 跳转短链接
+     */
+    void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
+
     /**
      * 创建短连接信息
      * @param requestParam 创建短链接请求参数
@@ -45,6 +53,7 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
      * 查询分组内的连接数量
      */
     List<ShortLinkGroupCountQueryRespDTO> countPerGroup(List<String> requestParams);
+
 
 
 }
